@@ -1,1 +1,84 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Alertes gratuites de montée de l'Argens pour Roquebrune-sur-Argens"><title>Argens Alerte</title><style>:root{font-family:system-ui,-apple-system,sans-serif;color:#173747;background:#f1f6f8}*{box-sizing:border-box}body{margin:0;text-align:center}header{background:#123f57;color:white;padding:32px 18px;text-align:center}main{max-width:760px;margin:auto;padding:20px}section{background:white;border-radius:16px;padding:24px;margin:16px 0;box-shadow:0 2px 12px #123f570d}h1{margin:0 0 6px}h2{font-size:1.3rem}p{line-height:1.55}a.btn,button{display:inline-block;border:0;border-radius:9px;background:#126786;color:white;padding:12px 16px;margin:5px 5px 5px 0;font:inherit;text-decoration:none;cursor:pointer}.secondary{background:#e7f1f5;color:#123f57}.small{font-size:.88rem;color:#56717c}.steps{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:center}.phone{border:8px solid #1c3440;border-radius:26px;max-width:250px;margin:auto;padding:12px;background:#f9fcfd;min-height:250px}.mock{padding:11px;background:white;border:1px solid #d8e4e8;border-radius:9px;margin:10px 0}.note{background:#fff8e7;padding:14px;border-radius:10px}footer{padding:20px;text-align:center;color:#56717c}@media(max-width:580px){.steps{grid-template-columns:1fr}section{padding:18px}}</style></head><body><header><div style="max-width:820px;margin:auto"><h1>🌊 Argens Alerte</h1><div data-fr="Surveillance indépendante du niveau de l'Argens" data-en="Independent monitoring of the Argens river level">Surveillance indépendante du niveau de l'Argens</div><button class="secondary" onclick="toggle()">FR / EN</button></div></header><main><section><h2 data-fr="🌊 Alertes de crue gratuites" data-en="🌊 Free flood alerts">🌊 Alertes de crue gratuites</h2><p data-fr="Pour les habitants de Roquebrune-sur-Argens et des environs. Recevez des notifications lorsque le niveau de l'Argens augmente rapidement, atteint un seuil de vigilance ou lorsque de fortes pluies (au moins 50 mm en 24 heures) sont prévues dans le bassin de l'Argens." data-en="For residents of Roquebrune-sur-Argens and nearby areas. Get push notifications when the Argens rises rapidly, reaches an alert threshold, or heavy rainfall (at least 50 mm in 24 hours) is forecast in the Argens catchment.">Pour les habitants de Roquebrune-sur-Argens et des environs. Recevez des notifications lorsque le niveau de l'Argens augmente rapidement, atteint un seuil de vigilance ou lorsque de fortes pluies (au moins 50 mm en 24 heures) sont prévues dans le bassin de l'Argens.</p><a class="btn" href="abonnement.html" data-fr="Voir les instructions d'abonnement" data-en="View subscription instructions">Voir les instructions d'abonnement</a></section><section><h2 data-fr="📡 Comment ça marche ?" data-en="📡 How does it work?">📡 Comment ça marche ?</h2><p data-fr="Le système vérifie régulièrement les mesures hydrométriques publiques ainsi que les prévisions de fortes pluies dans le bassin de l'Argens, puis envoie des notifications via l'application ntfy." data-en="The system regularly checks public river-level measurements and heavy-rain forecasts across the Argens catchment, then sends notifications through the ntfy app.">Le système vérifie régulièrement les mesures hydrométriques publiques ainsi que les prévisions de fortes pluies dans le bassin de l'Argens, puis envoie des notifications via l'application ntfy.</p><div class="note" data-fr="Service indépendant, non officiel. Ne remplace jamais Vigicrues, les consignes des autorités ni les alertes de sécurité civile." data-en="Independent, unofficial service. It does not replace Vigicrues, official instructions or emergency alerts.">Service indépendant, non officiel. Ne remplace jamais Vigicrues, les consignes des autorités ni les alertes de sécurité civile.</div></section></main><footer>Argens Alerte · <a href="https://www.vigicrues.gouv.fr/">Vigicrues</a></footer><script>(function(){const key='argens-alerte-language';let lang='fr';try{lang=localStorage.getItem(key)==='en'?'en':'fr'}catch(e){}function applyLanguage(){document.documentElement.lang=lang;document.querySelectorAll('[data-fr][data-en]').forEach(el=>{el.textContent=el.dataset[lang]})}window.toggle=function(){lang=lang==='fr'?'en':'fr';try{localStorage.setItem(key,lang)}catch(e){}applyLanguage()};applyLanguage()})();</script></html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Alertes gratuites de crue et de fortes pluies pour Roquebrune-sur-Argens">
+<title>Argens Alerte</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#173747;background:#f1f6f8}
+*{box-sizing:border-box}body{margin:0;text-align:center}
+header{background:#123f57;color:white;padding:36px 18px}
+header h1{margin:0 0 8px;font-size:clamp(2rem,5vw,2.7rem)}
+header p{margin:0 auto 15px;max-width:620px;line-height:1.5;color:#e2eef4}
+main{max-width:850px;margin:auto;padding:20px}
+section{background:white;border-radius:16px;padding:28px;margin:18px 0;box-shadow:0 2px 12px #123f570d}
+h2{font-size:1.4rem;margin:0 0 12px}h3{font-size:1.08rem;margin:0 0 9px}
+p{line-height:1.65;margin:10px 0} .lead{font-size:1.06rem;max-width:690px;margin:12px auto 22px}
+a.btn,button{display:inline-block;border:0;border-radius:9px;background:#126786;color:white;padding:12px 18px;margin:8px 5px;font:inherit;text-decoration:none;cursor:pointer}
+button.secondary{background:#e7f1f5;color:#123f57}
+.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0;text-align:left}
+.feature{background:#f4f8fa;border:1px solid #e2edf1;border-radius:12px;padding:19px}
+.feature .symbol{font-size:1.65rem;display:block;margin-bottom:10px}
+.feature p{font-size:.96rem;margin:0;color:#385562}
+.note{background:#fff8e7;padding:16px;border-radius:10px;text-align:left;margin-top:20px;line-height:1.6}
+.example{background:#eaf4f8;border-radius:12px;padding:17px 20px;margin:18px auto;max-width:520px;text-align:left}
+.example strong{display:block;margin-bottom:6px}.example p{margin:4px 0}
+footer{padding:20px;color:#56717c}
+@media(max-width:680px){.features{grid-template-columns:1fr}.feature{padding:16px}section{padding:22px 18px}main{padding:12px}.lead{font-size:1rem}}
+</style>
+</head>
+<body>
+<header>
+<h1>🌊 Argens Alerte</h1>
+<p data-fr="Surveillance indépendante des crues et des fortes pluies dans le bassin de l'Argens" data-en="Independent flood and heavy-rain monitoring in the Argens catchment">Surveillance indépendante des crues et des fortes pluies dans le bassin de l'Argens</p>
+<button class="secondary" onclick="toggle()" aria-label="Change language">FR / EN</button>
+</header>
+<main>
+<section>
+<h2 data-fr="Alertes gratuites pour l'Argens" data-en="Free alerts for the Argens">Alertes gratuites pour l'Argens</h2>
+<p class="lead" data-fr="Pour les habitants de Roquebrune-sur-Argens et des environs : recevez des notifications sur l'évolution du niveau de la rivière et les épisodes de fortes pluies annoncés." data-en="For residents of Roquebrune-sur-Argens and nearby areas: receive notifications about changes in river level and forecast heavy-rain events.">Pour les habitants de Roquebrune-sur-Argens et des environs : recevez des notifications sur l'évolution du niveau de la rivière et les épisodes de fortes pluies annoncés.</p>
+<div class="features">
+<article class="feature">
+<span class="symbol" aria-hidden="true">🌊</span>
+<h3 data-fr="Alertes de montée des eaux" data-en="River-level alerts">Alertes de montée des eaux</h3>
+<p data-fr="Soyez informé lorsque l'Argens monte rapidement ou atteint un seuil de vigilance défini." data-en="Get notified when the Argens rises rapidly or reaches a defined alert threshold.">Soyez informé lorsque l'Argens monte rapidement ou atteint un seuil de vigilance défini.</p>
+</article>
+<article class="feature">
+<span class="symbol" aria-hidden="true">📈</span>
+<h3 data-fr="Évolution sur 60 minutes" data-en="Change over 60 minutes">Évolution sur 60 minutes</h3>
+<p data-fr="Les notifications indiquent le niveau actuel et, lorsque les mesures le permettent, la hausse ou la baisse précise en centimètres sur environ 60 minutes." data-en="Notifications show the current level and, when measurements are available, the precise rise or fall in centimetres over approximately 60 minutes.">Les notifications indiquent le niveau actuel et, lorsque les mesures le permettent, la hausse ou la baisse précise en centimètres sur environ 60 minutes.</p>
+</article>
+<article class="feature">
+<span class="symbol" aria-hidden="true">🌧️</span>
+<h3 data-fr="Préalertes de fortes pluies" data-en="Heavy-rain early warnings">Préalertes de fortes pluies</h3>
+<p data-fr="Recevez une préalerte dès qu'au moins 50 mm de pluie sont prévus sur 24 heures dans les secteurs surveillés du bassin de l'Argens." data-en="Receive an early warning when at least 50 mm of rain is forecast within 24 hours at monitored locations in the Argens catchment.">Recevez une préalerte dès qu'au moins 50 mm de pluie sont prévus sur 24 heures dans les secteurs surveillés du bassin de l'Argens.</p>
+</article>
+</div>
+<a class="btn" href="abonnement.html" data-fr="🔔 Recevoir les alertes gratuitement" data-en="🔔 Get free alerts">🔔 Recevoir les alertes gratuitement</a>
+</section>
+<section>
+<h2 data-fr="📡 Comment ça marche ?" data-en="📡 How does it work?">📡 Comment ça marche ?</h2>
+<p data-fr="Argens Alerte consulte régulièrement les mesures hydrométriques publiques et les prévisions météorologiques de plusieurs points du bassin de l'Argens. Les alertes sont envoyées via l'application ntfy." data-en="Argens Alerte regularly checks public river-level measurements and weather forecasts at several locations in the Argens catchment. Alerts are delivered through the ntfy app.">Argens Alerte consulte régulièrement les mesures hydrométriques publiques et les prévisions météorologiques de plusieurs points du bassin de l'Argens. Les alertes sont envoyées via l'application ntfy.</p>
+<div class="example">
+<strong data-fr="Exemple d'information transmise" data-en="Example of information sent">Exemple d'information transmise</strong>
+<p data-fr="Niveau actuel : 3,45 m" data-en="Current level: 3.45 m">Niveau actuel : 3,45 m</p>
+<p data-fr="Niveau précédent : 3,10 m" data-en="Previous level: 3.10 m">Niveau précédent : 3,10 m</p>
+<p data-fr="Hausse : +35 cm en 60 min" data-en="Rise: +35 cm in 60 min">Hausse : +35 cm en 60 min</p>
+<small data-fr="Exemple fictif — pas une mesure en temps réel." data-en="Illustrative example — not a live measurement.">Exemple fictif — pas une mesure en temps réel.</small>
+</div>
+<div class="note" data-fr="⚠️ Service indépendant et non officiel. Les prévisions de pluie ne garantissent pas une crue. Ce service ne remplace ni Vigicrues, ni les consignes des autorités, ni les alertes de sécurité civile." data-en="⚠️ Independent, unofficial service. Heavy-rain forecasts do not necessarily mean flooding will occur. This service does not replace Vigicrues, official instructions or emergency alerts.">⚠️ Service indépendant et non officiel. Les prévisions de pluie ne garantissent pas une crue. Ce service ne remplace ni Vigicrues, ni les consignes des autorités, ni les alertes de sécurité civile.</div>
+</section>
+</main>
+<footer>Argens Alerte · <a href="https://www.vigicrues.gouv.fr/">Vigicrues</a></footer>
+<script>
+(function(){
+const key='argens-alerte-language';let lang='fr';
+try{lang=localStorage.getItem(key)==='en'?'en':'fr'}catch(e){}
+function applyLanguage(){document.documentElement.lang=lang;document.querySelectorAll('[data-fr][data-en]').forEach(el=>{el.textContent=el.dataset[lang]})}
+window.toggle=function(){lang=lang==='fr'?'en':'fr';try{localStorage.setItem(key,lang)}catch(e){}applyLanguage()};
+applyLanguage()
+})();
+</script>
+</body>
+</html>
