@@ -1,0 +1,27 @@
+name: Publish central river status
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: publish-river-status
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch observations and preserve last good reading
+        run: python3 scripts/publish_river_status.py
+      - name: Commit status when changed
+        run: |
+          if ! git diff --quiet -- river-status.json || [ -n "$(git ls-files --others --exclude-standard -- river-status.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add river-status.json
+            git commit -m "Update central Argens river observation"
+            git push
+          fi
