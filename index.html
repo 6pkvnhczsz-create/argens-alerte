@@ -130,6 +130,19 @@ async function refreshRiver(){
 }
 const oldToggle=window.toggle;window.toggle=function(){oldToggle();showReading()};
 refreshRiver();setInterval(refreshRiver,5*60*1000);
+// Anonymous, approximate unique-browser counter: one count per browser storage.
+// No visitor identifier is sent; the counter service only receives a hit request.
+(function countUniqueBrowser(){
+ const storageKey='argens-alerte-visitor-counted-v1';
+ const endpoint='https://countapi.mileshilliard.com/api/v1/hit/argens_alerte_home_unique_browsers_2026';
+ try{
+  if(localStorage.getItem(storageKey)==='1')return;
+  fetch(endpoint,{cache:'no-store',mode:'cors',signal:AbortSignal.timeout(10000)})
+   .then(response=>{if(!response.ok)throw Error('Counter unavailable');return response.json()})
+   .then(()=>{try{localStorage.setItem(storageKey,'1')}catch(e){}})
+   .catch(()=>{});
+ }catch(e){}
+})();
 })();
 </script>
 </body>
