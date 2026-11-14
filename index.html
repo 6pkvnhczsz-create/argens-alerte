@@ -111,7 +111,7 @@ function showReading(){
 async function refreshRiver(){
  try{
   const start=new Date(Date.now()-4*3600000).toISOString().replace(/\.\d{3}Z$/,'Z');
-  const q=new URLSearchParams({code_entite:station,grandeur_hydro:'H',size:'200',sort:'desc',date_debut_obs:start});
+  const q=new URLSearchParams({code_entite:station,grandeur_hydro:'H',size:'200',sort:'desc',date_debut_obs:start,_:String(Date.now())});
   const response=await fetch(endpoint+'?'+q.toString(),{cache:'no-store',signal:AbortSignal.timeout(15000)});
   if(!response.ok)throw Error('HTTP '+response.status);
   const json=await response.json(),points=new Map();
@@ -129,7 +129,7 @@ async function refreshRiver(){
  showReading();
 }
 const oldToggle=window.toggle;window.toggle=function(){oldToggle();showReading()};
-refreshRiver();setInterval(refreshRiver,5*60*1000);
+refreshRiver();setInterval(refreshRiver,60*1000);
 // Anonymous, approximate unique-browser counter: one count per browser storage.
 // No visitor identifier is sent; the counter service only receives a hit request.
 (function countUniqueBrowser(){
