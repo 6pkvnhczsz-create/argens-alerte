@@ -63,6 +63,7 @@ button.secondary{background:#e7f1f5;color:#123f57}
 
 <div class="example" id="river-live" aria-live="polite">
 <strong data-fr="🌊 Niveau de l'Argens — dernières mesures" data-en="🌊 Argens river level — latest readings">🌊 Niveau de l'Argens — dernières mesures</strong>
+<div id="river-health" role="status" aria-live="polite" style="display:inline-block;margin:12px 0 5px;padding:5px 12px;border-radius:999px;font-size:.78rem;font-weight:700;background:#edf1f5;color:#344054">◌ Vérification des données…</div>
 <p id="river-current" data-fr="Chargement des mesures…" data-en="Loading measurements…">Chargement des mesures…</p>
 <p id="river-previous"></p>
 <p id="river-change"></p>
@@ -94,6 +95,13 @@ function showReading(){
  const en=langNow()==='en';
  if(!window.riverReadings){return}
  const data=window.riverReadings;
+ const health=document.getElementById('river-health');
+ const isStale=Boolean(data.error||!data.latest||(Date.now()-data.latest.t.getTime())/60000>75);
+ if(health){
+  health.textContent=isStale?(en?'⚠ Data unavailable — last known reading':'⚠ Données indisponibles — dernière mesure connue'):(en?'● Data up to date':'● Données actualisées');
+  health.style.background=isStale?'#fff0e9':'#e5f5ed';
+  health.style.color=isStale?'#9a3412':'#166534';
+ }
  const fmt=t=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(t);
  const meters=v=>(v/1000).toLocaleString(en?'en-GB':'fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
  if(data.error||((Date.now()-data.latest.t.getTime())/60000>75)){
