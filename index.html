@@ -61,12 +61,12 @@ button.secondary{background:#e7f1f5;color:#123f57}
 <h2 data-fr="📡 Comment ça marche ?" data-en="📡 How does it work?">📡 Comment ça marche ?</h2>
 <p data-fr="Argens Alerte consulte régulièrement les mesures hydrométriques publiques et les prévisions météorologiques de plusieurs points du bassin de l'Argens." data-en="Argens Alerte regularly checks public river-level measurements and weather forecasts at several locations in the Argens catchment.">Argens Alerte consulte régulièrement les mesures hydrométriques publiques et les prévisions météorologiques de plusieurs points du bassin de l'Argens.</p>
 
-<div class="example">
-<strong data-fr="Exemple d'information transmise" data-en="Example of information sent">Exemple d'information transmise</strong>
-<p data-fr="Niveau actuel : 3,45 m (14:30)" data-en="Current level: 3.45 m (14:30)">Niveau actuel : 3,45 m (14:30)</p>
-<p data-fr="Niveau précédent : 3,10 m (13:30)" data-en="Previous level: 3.10 m (13:30)">Niveau précédent : 3,10 m (13:30)</p>
-<p data-fr="Hausse : +35 cm en 60 min" data-en="Rise: +35 cm in 60 min">Hausse : +35 cm en 60 min</p>
-<small data-fr="Exemple fictif." data-en="Illustrative example.">Exemple fictif.</small>
+<div class="example" id="river-live" aria-live="polite">
+<strong data-fr="🌊 Niveau de l'Argens — dernières mesures" data-en="🌊 Argens river level — latest readings">🌊 Niveau de l'Argens — dernières mesures</strong>
+<p id="river-current" data-fr="Chargement des mesures…" data-en="Loading measurements…">Chargement des mesures…</p>
+<p id="river-previous"></p>
+<p id="river-change"></p>
+<small id="river-status" data-fr="Station hydrométrique Y531201001 · Source : Hub'Eau" data-en="Hydrometric station Y531201001 · Source: Hub'Eau">Station hydrométrique Y531201001 · Source : Hub'Eau</small>
 </div>
 <div class="note" data-fr="⚠️ Service indépendant et non officiel. Les prévisions de pluie ne garantissent pas une crue. Ce service ne remplace ni Vigicrues, ni les consignes des autorités, ni les alertes de sécurité civile." data-en="⚠️ Independent, unofficial service. Heavy-rain forecasts do not necessarily mean flooding will occur. This service does not replace Vigicrues, official instructions or emergency alerts.">⚠️ Service indépendant et non officiel. Les prévisions de pluie ne garantissent pas une crue. Ce service ne remplace ni Vigicrues, ni les consignes des autorités, ni les alertes de sécurité civile.</div>
 </section>
@@ -85,7 +85,51 @@ const key='argens-alerte-language';let lang='fr';
 try{lang=localStorage.getItem(key)==='en'?'en':'fr'}catch(e){}
 function applyLanguage(){document.documentElement.lang=lang;document.querySelectorAll('[data-fr][data-en]').forEach(el=>{el.textContent=el.dataset[lang]})}
 window.toggle=function(){lang=lang==='fr'?'en':'fr';try{localStorage.setItem(key,lang)}catch(e){}applyLanguage()};
-applyLanguage()
+applyLanguage();
+const station='Y531201001';
+const endpoint='https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr';
+const current=document.getElementById('river-current'),previous=document.getElementById('river-previous'),change=document.getElementById('river-change'),status=document.getElementById('river-status');
+function langNow(){return document.documentElement.lang==='en'?'en':'fr'}
+function showReading(){
+ const en=langNow()==='en';
+ if(!window.riverReadings){return}
+ const data=window.riverReadings;
+ if(data.error){current.textContent=en?'Measurements temporarily unavailable.':'Données temporairement indisponibles.';previous.textContent='';change.textContent='';status.textContent=en?'Source: Hub’Eau · Station Y531201001':'Source : Hub’Eau · Station Y531201001';return}
+ const fmt=t=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(t);
+ const meters=v=>(v/1000).toLocaleString(en?'en-GB':'fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const age=(Date.now()-data.latest.t.getTime())/60000;
+ if(age>75){current.textContent=en?'No recent measurement available.':'Aucune mesure récente disponible.';previous.textContent='';change.textContent='';status.textContent=(en?'Last reading: ':'Dernière mesure : ')+fmt(data.latest.t)+' · '+(en?'Data outdated':'Données anciennes')+' · Hub’Eau';return}
+ current.textContent=(en?'Current level: ':'Niveau actuel : ')+meters(data.latest.mm)+' m ('+fmt(data.latest.t)+')';
+ if(data.prior){
+  previous.textContent=(en?'Previous level: ':'Niveau précédent : ')+meters(data.prior.mm)+' m ('+fmt(data.prior.t)+')';
+  const cm=(data.latest.mm-data.prior.mm)/10,minutes=Math.round((data.latest.t-data.prior.t)/60000);
+  const label=cm>0?(en?'Rise':'Hausse'):cm<0?(en?'Fall':'Baisse'):(en?'Change':'Variation');
+  change.textContent=label+' : '+(cm>0?'+':'')+cm.toLocaleString(en?'en-GB':'fr-FR',{maximumFractionDigits:1})+' cm '+(en?'in ':'en ')+minutes+' min';
+ }else{previous.textContent=en?'Previous reading unavailable.':'Mesure précédente indisponible.';change.textContent=''}
+ status.textContent=(en?'Latest reading: ':'Dernière mesure : ')+fmt(data.latest.t)+' · '+(en?'Station Y531201001 · Source: Hub’Eau':'Station Y531201001 · Source : Hub’Eau');
+}
+async function refreshRiver(){
+ try{
+  const start=new Date(Date.now()-4*3600000).toISOString().replace(/\.\d{3}Z$/,'Z');
+  const q=new URLSearchParams({code_entite:station,grandeur_hydro:'H',size:'200',sort:'desc',date_debut_obs:start});
+  const response=await fetch(endpoint+'?'+q.toString(),{cache:'no-store',signal:AbortSignal.timeout(15000)});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const json=await response.json(),points=new Map();
+  for(const row of json.data||[]){
+   if(row.code_station!==station||row.grandeur_hydro!=='H')continue;
+   const t=new Date(row.date_obs),mm=Number(row.resultat_obs);
+   if(Number.isFinite(mm)&&mm>=0&&mm<=20000&&!isNaN(t)&&t.getTime()<=Date.now()+300000)points.set(t.getTime(),{t,mm});
+  }
+  const sorted=[...points.values()].sort((a,b)=>b.t-a.t);
+  if(!sorted.length)throw Error('No measurements');
+  const latest=sorted[0];
+  const prior=sorted.filter(p=>{const minutes=(latest.t-p.t)/60000;return minutes>=40&&minutes<=100}).sort((a,b)=>Math.abs((latest.t-a.t)/60000-60)-Math.abs((latest.t-b.t)/60000-60))[0]||null;
+  window.riverReadings={latest,prior};
+ }catch(e){console.warn('Argens live readings unavailable',e);window.riverReadings={error:true}}
+ showReading();
+}
+const oldToggle=window.toggle;window.toggle=function(){oldToggle();showReading()};
+refreshRiver();setInterval(refreshRiver,5*60*1000);
 })();
 </script>
 </body>
