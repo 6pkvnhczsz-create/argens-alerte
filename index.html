@@ -106,26 +106,39 @@ function showReading(){
   const label=cm>0?(en?'Rise':'Hausse'):cm<0?(en?'Fall':'Baisse'):(en?'Change':'Variation');
   change.textContent=label+' : '+(cm>0?'+':'')+cm.toLocaleString(en?'en-GB':'fr-FR',{maximumFractionDigits:1})+' cm '+(en?'in ':'en ')+minutes+' min';
  }else{previous.textContent=en?'Previous reading unavailable.':'Mesure précédente indisponible.';change.textContent=''}
- status.textContent=(en?'Latest reading: ':'Dernière mesure : ')+fmt(data.latest.t)+' · '+(en?'Station Y531201001 · Source: Hub’Eau':'Station Y531201001 · Source : Hub’Eau');
+ status.textContent=(en?'Latest reading: ':'Dernière mesure : ')+fmt(data.latest.t)+' · '+(en?'Station Y531201001 · Source: ':'Station Y531201001 · Source : ')+data.source;
+}
+async function loadRiverSource(source){
+ const now=Date.now(),start=new Date(now-4*3600000).toISOString().replace(/\.\d{3}Z$/,'Z');
+ const vig=source==='Vigicrues';
+ const url=vig?'https://www.vigicrues.gouv.fr/services/observations.json':endpoint;
+ const q=vig?new URLSearchParams({CdStationHydro:station,GrdSerie:'H',FormatDate:'iso',_:String(now)}):new URLSearchParams({code_entite:station,grandeur_hydro:'H',size:'200',sort:'desc',date_debut_obs:start,_:String(now)});
+ const response=await fetch(url+'?'+q,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+ if(!response.ok)throw Error('HTTP '+response.status);
+ const json=await response.json(),points=new Map();
+ const rows=vig?(json?.Serie?.ObssHydro||[]):(json.data||[]);
+ for(const row of rows){
+  let time,raw;
+  if(vig){if(Array.isArray(row)){[time,raw]=row}else{time=row?.DtObsHydro||row?.date_obs;raw=row?.ResObsHydro??row?.resultat_obs}}
+  else{if(row.code_station!==station||row.grandeur_hydro!=='H')continue;time=row.date_obs;raw=row.resultat_obs}
+  const t=new Date(time),mm=Number(raw)*(vig?1000:1);
+  if(Number.isFinite(mm)&&mm>=0&&mm<=20000&&!isNaN(t)&&t.getTime()<=now+300000)points.set(t.getTime(),{t,mm});
+ }
+ const sorted=[...points.values()].sort((a,b)=>b.t-a.t);
+ if(!sorted.length)throw Error('No measurements');
+ if((now-sorted[0].t.getTime())/60000>75)throw Error('Measurements outdated');
+ const latest=sorted[0];
+ const prior=sorted.filter(p=>{const minutes=(latest.t-p.t)/60000;return minutes>=40&&minutes<=100}).sort((a,b)=>Math.abs((latest.t-a.t)/60000-60)-Math.abs((latest.t-b.t)/60000-60))[0]||null;
+ return {latest,prior,source};
 }
 async function refreshRiver(){
  try{
-  const start=new Date(Date.now()-4*3600000).toISOString().replace(/\.\d{3}Z$/,'Z');
-  const q=new URLSearchParams({code_entite:station,grandeur_hydro:'H',size:'200',sort:'desc',date_debut_obs:start,_:String(Date.now())});
-  const response=await fetch(endpoint+'?'+q.toString(),{cache:'no-store',signal:AbortSignal.timeout(15000)});
-  if(!response.ok)throw Error('HTTP '+response.status);
-  const json=await response.json(),points=new Map();
-  for(const row of json.data||[]){
-   if(row.code_station!==station||row.grandeur_hydro!=='H')continue;
-   const t=new Date(row.date_obs),mm=Number(row.resultat_obs);
-   if(Number.isFinite(mm)&&mm>=0&&mm<=20000&&!isNaN(t)&&t.getTime()<=Date.now()+300000)points.set(t.getTime(),{t,mm});
+  try{window.riverReadings=await loadRiverSource("Hub'Eau")}
+  catch(primaryError){
+   console.warn("Hub'Eau unavailable; trying Vigicrues",primaryError);
+   window.riverReadings=await loadRiverSource("Vigicrues");
   }
-  const sorted=[...points.values()].sort((a,b)=>b.t-a.t);
-  if(!sorted.length)throw Error('No measurements');
-  const latest=sorted[0];
-  const prior=sorted.filter(p=>{const minutes=(latest.t-p.t)/60000;return minutes>=40&&minutes<=100}).sort((a,b)=>Math.abs((latest.t-a.t)/60000-60)-Math.abs((latest.t-b.t)/60000-60))[0]||null;
-  window.riverReadings={latest,prior};
- }catch(e){console.warn('Argens live readings unavailable',e);window.riverReadings={error:true}}
+ }catch(e){console.warn('Both river sources unavailable',e);window.riverReadings={error:true}}
  showReading();
 }
 const oldToggle=window.toggle;window.toggle=function(){oldToggle();showReading()};
