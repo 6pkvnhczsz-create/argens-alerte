@@ -1,12 +1,12 @@
 {
   "station": "Y531201001",
-  "checked_at": "2026-11-14T12:44:21.792089Z",
+  "checked_at": "2026-11-14T13:36:36.398800Z",
   "source_available": true,
   "last": {
-    "time": "2026-11-14T12:00:00Z",
-    "mm": 1540.0,
-    "prior_time": "2026-11-14T11:00:00Z",
-    "prior_mm": 1548.0,
+    "time": "2026-11-14T13:00:00Z",
+    "mm": 1523.0,
+    "prior_time": "2026-11-14T12:00:00Z",
+    "prior_mm": 1540.0,
     "source": "Hub'Eau"
   }
 }
