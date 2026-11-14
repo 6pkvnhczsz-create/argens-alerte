@@ -94,11 +94,25 @@ function showReading(){
  const en=langNow()==='en';
  if(!window.riverReadings){return}
  const data=window.riverReadings;
- if(data.error){current.textContent=en?'Measurements temporarily unavailable.':'Données temporairement indisponibles.';previous.textContent='';change.textContent='';status.textContent=en?'Source: Hub’Eau · Station Y531201001':'Source : Hub’Eau · Station Y531201001';return}
- const fmt=t=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(t);
+ const fmt=t=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(t);
  const meters=v=>(v/1000).toLocaleString(en?'en-GB':'fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+ if(data.error||((Date.now()-data.latest.t.getTime())/60000>75)){
+  current.textContent=en?'⚠️ Measurement systems currently unavailable or outdated.':'⚠️ Systèmes de mesure indisponibles ou données anciennes.';
+  const last=data.last||(!data.error?data:null);
+  if(last?.latest){
+   previous.textContent=(en?'Last known level: ':'Dernier niveau connu : ')+meters(last.latest.mm)+' m ('+fmt(last.latest.t)+')';
+   if(last.prior){
+    const cm=(last.latest.mm-last.prior.mm)/10,mins=Math.round((last.latest.t-last.prior.t)/60000);
+    change.textContent=(en?'Last known trend: ':'Dernière tendance connue : ')+(cm>0?'+':'')+cm.toLocaleString(en?'en-GB':'fr-FR',{maximumFractionDigits:1})+' cm '+(en?'in ':'en ')+mins+' min';
+   }else change.textContent=en?'Last trend unavailable.':'Dernière tendance indisponible.';
+  }else{previous.textContent=en?'No last known measurement available in this browser.':'Aucune dernière mesure enregistrée dans ce navigateur.';change.textContent=''}
+  status.textContent=en?'⚠️ Historical data only — not the current situation.':'⚠️ Données historiques — situation actuelle inconnue.';
+  status.style.whiteSpace='normal';
+  return;
+ }
+ status.style.whiteSpace='';
  const age=(Date.now()-data.latest.t.getTime())/60000;
- if(age>75){current.textContent=en?'No recent measurement available.':'Aucune mesure récente disponible.';previous.textContent='';change.textContent='';status.textContent=(en?'Last reading: ':'Dernière mesure : ')+fmt(data.latest.t)+' · '+(en?'Data outdated':'Données anciennes')+' · Hub’Eau';return}
+
  current.textContent=(en?'Current level: ':'Niveau actuel : ')+meters(data.latest.mm)+' m ('+fmt(data.latest.t)+')';
  if(data.prior){
   previous.textContent=(en?'Previous level: ':'Niveau précédent : ')+meters(data.prior.mm)+' m ('+fmt(data.prior.t)+')';
@@ -138,7 +152,16 @@ async function refreshRiver(){
    console.warn("Hub'Eau unavailable; trying Vigicrues",primaryError);
    window.riverReadings=await loadRiverSource("Vigicrues");
   }
- }catch(e){console.warn('Both river sources unavailable',e);window.riverReadings={error:true}}
+  try{localStorage.setItem('argens-alerte-last-reading-v1',JSON.stringify({latest:{t:window.riverReadings.latest.t.toISOString(),mm:window.riverReadings.latest.mm},prior:window.riverReadings.prior?{t:window.riverReadings.prior.t.toISOString(),mm:window.riverReadings.prior.mm}:null,source:window.riverReadings.source}))}catch(e){}
+ }catch(e){
+  console.warn('Both river sources unavailable',e);
+  let last=null;
+  try{
+   const stored=JSON.parse(localStorage.getItem('argens-alerte-last-reading-v1')||'null');
+   if(stored?.latest&&Number.isFinite(stored.latest.mm)&&!isNaN(new Date(stored.latest.t)))last={latest:{t:new Date(stored.latest.t),mm:stored.latest.mm},prior:stored.prior?{t:new Date(stored.prior.t),mm:stored.prior.mm}:null};
+  }catch(e){}
+  window.riverReadings={error:true,last};
+ }
  showReading();
 }
 const oldToggle=window.toggle;window.toggle=function(){oldToggle();showReading()};
