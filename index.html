@@ -145,22 +145,51 @@ async function loadRiverSource(source){
  const prior=sorted.filter(p=>{const minutes=(latest.t-p.t)/60000;return minutes>=40&&minutes<=100}).sort((a,b)=>Math.abs((latest.t-a.t)/60000-60)-Math.abs((latest.t-b.t)/60000-60))[0]||null;
  return {latest,prior,source};
 }
+function asRiverReading(point){
+ if(!point||!Number.isFinite(Number(point.mm))||isNaN(new Date(point.time)))return null;
+ return {t:new Date(point.time),mm:Number(point.mm)};
+}
+async function loadCentralRiver(){
+ const response=await fetch('river-status.json?ts='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(12000)});
+ if(!response.ok)throw Error('Central HTTP '+response.status);
+ const json=await response.json();
+ if(json.station!==station||!json.last)throw Error('No central reading yet');
+ const latest=asRiverReading(json.last);
+ if(!latest)throw Error('Invalid central reading');
+ const prior=json.last.prior_time?asRiverReading({time:json.last.prior_time,mm:json.last.prior_mm}):null;
+ const data={latest,prior,source:json.last.source||'Central'};
+ const checked=new Date(json.checked_at);
+ if(!json.source_available||isNaN(checked)||Date.now()-checked.getTime()>20*60000||(Date.now()-latest.t.getTime())/60000>75){
+  return {error:true,last:data};
+ }
+ return data;
+}
 async function refreshRiver(){
- try{
-  try{window.riverReadings=await loadRiverSource("Hub'Eau")}
-  catch(primaryError){
-   console.warn("Hub'Eau unavailable; trying Vigicrues",primaryError);
-   window.riverReadings=await loadRiverSource("Vigicrues");
-  }
-  try{localStorage.setItem('argens-alerte-last-reading-v1',JSON.stringify({latest:{t:window.riverReadings.latest.t.toISOString(),mm:window.riverReadings.latest.mm},prior:window.riverReadings.prior?{t:window.riverReadings.prior.t.toISOString(),mm:window.riverReadings.prior.mm}:null,source:window.riverReadings.source}))}catch(e){}
- }catch(e){
-  console.warn('Both river sources unavailable',e);
-  let last=null;
+ let central=null;
+ try{central=await loadCentralRiver()}catch(e){console.warn('Central river status unavailable',e)}
+ if(central&&!central.error){
+  window.riverReadings=central;
+ }else{
   try{
-   const stored=JSON.parse(localStorage.getItem('argens-alerte-last-reading-v1')||'null');
-   if(stored?.latest&&Number.isFinite(stored.latest.mm)&&!isNaN(new Date(stored.latest.t)))last={latest:{t:new Date(stored.latest.t),mm:stored.latest.mm},prior:stored.prior?{t:new Date(stored.prior.t),mm:stored.prior.mm}:null};
-  }catch(e){}
-  window.riverReadings={error:true,last};
+   try{window.riverReadings=await loadRiverSource("Hub'Eau")}
+   catch(primaryError){
+    console.warn("Hub'Eau unavailable; trying Vigicrues",primaryError);
+    window.riverReadings=await loadRiverSource("Vigicrues");
+   }
+  }catch(e){
+   console.warn('Both live sources unavailable',e);
+   let last=central?.last||null;
+   if(!last){
+    try{
+     const stored=JSON.parse(localStorage.getItem('argens-alerte-last-reading-v1')||'null');
+     if(stored?.latest&&Number.isFinite(stored.latest.mm)&&!isNaN(new Date(stored.latest.t)))last={latest:{t:new Date(stored.latest.t),mm:stored.latest.mm},prior:stored.prior?{t:new Date(stored.prior.t),mm:stored.prior.mm}:null};
+    }catch(e){}
+   }
+   window.riverReadings={error:true,last};
+  }
+ }
+ if(!window.riverReadings.error){
+  try{localStorage.setItem('argens-alerte-last-reading-v1',JSON.stringify({latest:{t:window.riverReadings.latest.t.toISOString(),mm:window.riverReadings.latest.mm},prior:window.riverReadings.prior?{t:window.riverReadings.prior.t.toISOString(),mm:window.riverReadings.prior.mm}:null,source:window.riverReadings.source}))}catch(e){}
  }
  showReading();
 }
