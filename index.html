@@ -128,7 +128,8 @@ function showReading(){
   const label=cm>0?(en?'Rise':'Hausse'):cm<0?(en?'Fall':'Baisse'):(en?'Change':'Variation');
   change.textContent=label+' : '+(cm>0?'+':'')+cm.toLocaleString(en?'en-GB':'fr-FR',{maximumFractionDigits:1})+' cm '+(en?'in ':'en ')+minutes+' min';
  }else{previous.textContent=en?'Previous reading unavailable.':'Mesure précédente indisponible.';change.textContent=''}
- status.textContent=(en?'Latest reading: ':'Dernière mesure : ')+fmt(data.latest.t)+' · '+(en?'Roquebrune-sur-Argens station · Source: ':'Station de Roquebrune-sur-Argens · Source : ')+data.source;
+ status.textContent=(en?'Latest reading: ':'Dernière mesure : ')+fmt(data.latest.t)+'\n'+(en?'Roquebrune-sur-Argens station · Source: ':'Station de Roquebrune-sur-Argens · Source : ')+data.source;
+ status.style.whiteSpace='pre-line';
 }
 async function loadRiverSource(source){
  const now=Date.now(),start=new Date(now-4*3600000).toISOString().replace(/\.\d{3}Z$/,'Z');
