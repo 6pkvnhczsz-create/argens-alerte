@@ -5,7 +5,7 @@
 <body><div class="phone">
 <div class="top"><div><div class="brand">🌊 Argens Alerte</div><div class="muted">Surveillance des crues</div></div><span class="pill">🇫🇷 FR</span></div>
 <div id="overview"><div class="hero"><small>STATION SUIVIE</small><div style="font-weight:700;font-size:20px;margin-top:5px">Roquebrune-sur-Argens</div><div class="level"><span id="level">1,56</span><span style="font-size:25px;letter-spacing:0"> m</span></div><div id="status" class="status green">● Situation normale</div><div class="sub" id="trend">↗ Simulation du niveau</div><svg class="chart" viewBox="0 0 340 110" preserveAspectRatio="none" aria-label="Courbe de niveau simulée"><path d="M0 88 C60 80 75 85 110 65 S175 70 215 43 S275 45 340 15" fill="none" stroke="#63d4bd" stroke-width="4" stroke-linecap="round"/><path d="M0 106 H340" stroke="#456476" stroke-dasharray="5 5"/></svg><div class="sub">Démonstration · aucune alerte réelle</div></div>
-<div class="section-title">Vue d’ensemble</div><div class="cards"><div class="card"><small>Évolution</small><strong id="delta">+0 cm</strong><small>Simulation</small></div><div class="card"><small>Pluie</small><strong>—</strong><small>Données à connecter</small></div></div>
+<div class="panel"><strong>📍 Trouver une station près de chez moi</strong><p class="note">Entrez une commune française ou autorisez votre position. Les stations sont classées par distance à vol d’oiseau.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="place" placeholder="Ville ou code postal" aria-label="Ville ou code postal" style="flex:1;min-width:160px;border:1px solid #cbdce4;border-radius:10px;padding:12px;font:inherit"><button id="findPlace" style="border:0;background:#087f91;color:white;border-radius:10px;padding:11px">Rechercher</button><button id="gps" style="border:1px solid #cbdce4;background:white;border-radius:10px;padding:11px">⌖ Ma position</button></div><p id="stationMessage" class="note" role="status"></p><div id="stations"></div></div><div class="section-title">Vue d’ensemble</div><div class="cards"><div class="card"><small>Évolution</small><strong id="delta">+0 cm</strong><small>Simulation</small></div><div class="card"><small>Pluie</small><strong>—</strong><small>Données à connecter</small></div></div>
 <div class="panel"><strong>Tester les couleurs d’alerte</strong><p class="note">Déplacez le curseur pour simuler la montée du fleuve. Seuils fictifs, non validés pour cette station.</p><input type="range" min="1" max="4" step=".05" value="1.56" id="slider"><div class="muted" style="display:flex;justify-content:space-between"><span>1,00 m</span><span>4,00 m</span></div></div>
 <p class="note">Prototype indépendant. Ne pas utiliser pour la sécurité des personnes. Consultez Vigicrues et les consignes officielles en cas de danger.</p></div>
 <div id="other" class="hidden"><div class="section-title" id="otherTitle"></div><div class="panel">Cette rubrique sera développée dans la prochaine étape.</div></div>
@@ -14,4 +14,34 @@
 const slider=document.querySelector('#slider');const level=document.querySelector('#level');const status=document.querySelector('#status');const delta=document.querySelector('#delta');
 slider.addEventListener('input',()=>{const n=Number(slider.value);level.textContent=n.toFixed(2).replace('.',',');delta.textContent=(n>=1.56?'+':'')+Math.round((n-1.56)*100)+' cm';const state=n<2?['green','● Situation normale']:n<3?['orange','● Vigilance – niveau élevé']:['red','● Alerte – niveau élevé'];status.className='status '+state[0];status.textContent=state[1]});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{const tab=b.dataset.tab;document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelector('#overview').classList.toggle('hidden',tab!=='overview');document.querySelector('#other').classList.toggle('hidden',tab==='overview');document.querySelector('#otherTitle').textContent=tab}));
+
+// Recherche de stations via les données publiques Hub'Eau (prototype isolé).
+const message=document.querySelector('#stationMessage'),stationsEl=document.querySelector('#stations');
+function km(a,b,c,d){const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r;const h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 12742*Math.asin(Math.sqrt(h))}
+async function findStations(lat,lon){
+ message.textContent='Recherche des stations à proximité…';stationsEl.replaceChildren();
+ try{
+  let matches=[];
+  for(const radius of [0.15,0.5,1.5]){
+   const bbox=[lon-radius,lat-radius,lon+radius,lat+radius].join(',');
+   const url='https://hubeau.eaufrance.fr/api/v2/hydrometrie/referentiel/stations?format=json&size=1000&bbox='+encodeURIComponent(bbox);
+   const res=await fetch(url);if(!res.ok)throw Error('Service hydrométrique indisponible');
+   const json=await res.json();
+   matches=(json.data||[]).filter(s=>Number.isFinite(Number(s.latitude_station))&&Number.isFinite(Number(s.longitude_station))).map(s=>({...s,distance:km(lat,lon,Number(s.latitude_station),Number(s.longitude_station))})).sort((a,b)=>a.distance-b.distance);
+   if(matches.length>=5||radius===1.5)break;
+  }
+  const seen=new Set();matches=matches.filter(s=>{if(seen.has(s.code_station))return false;seen.add(s.code_station);return true}).slice(0,5);
+  message.textContent=matches.length?'Choisissez une station (distance à vol d’oiseau).':'Aucune station trouvée à proximité.';
+  for(const s of matches){
+   const btn=document.createElement('button');btn.type='button';btn.style.cssText='display:block;width:100%;text-align:left;background:#f3f8fa;border:1px solid #d9e8ee;border-radius:12px;padding:12px;margin:8px 0;color:#163447';
+   const name=document.createElement('strong');name.textContent=s.libelle_station||s.libelle_site||s.code_station;
+   const detail=document.createElement('div');detail.className='note';detail.textContent=s.distance.toFixed(1).replace('.',',')+' km · '+s.code_station;
+   btn.append(name,detail);btn.addEventListener('click',()=>{document.querySelector('.hero div[style*="font-weight:700"]').textContent=s.libelle_station||s.libelle_site||s.code_station;message.textContent='Station sélectionnée : '+s.code_station+'. Connexion des mesures à venir. Les valeurs affichées restent simulées.';document.querySelectorAll('#stations button').forEach(b=>b.style.borderColor='#d9e8ee');btn.style.borderColor='#087f91';});stationsEl.append(btn);
+  }
+ }catch(e){message.textContent='Recherche indisponible pour le moment. Réessayez plus tard.'}
+}
+async function searchPlace(){const q=document.querySelector('#place').value.trim();if(!q)return;message.textContent='Recherche de la commune…';try{const res=await fetch('https://api-adresse.data.gouv.fr/search/?limit=1&q='+encodeURIComponent(q));if(!res.ok)throw Error();const j=await res.json();const point=j.features?.[0]?.geometry?.coordinates;if(!point){message.textContent='Lieu introuvable en France.';return}await findStations(point[1],point[0])}catch(e){message.textContent='Recherche de commune indisponible.'}}
+document.querySelector('#findPlace').addEventListener('click',searchPlace);
+document.querySelector('#place').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchPlace()}});
+document.querySelector('#gps').addEventListener('click',()=>{if(!navigator.geolocation){message.textContent='Géolocalisation non disponible.';return}message.textContent='Demande de position…';navigator.geolocation.getCurrentPosition(p=>findStations(p.coords.latitude,p.coords.longitude),()=>message.textContent='Position non autorisée ou indisponible.',{timeout:12000,enableHighAccuracy:false})});
 </script></body></html>
