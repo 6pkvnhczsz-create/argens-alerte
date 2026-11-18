@@ -1,7 +1,7 @@
 {
   "station": "Y531201001",
-  "checked_at": "2026-11-18T10:49:08.716761Z",
-  "source_available": true,
+  "checked_at": "2026-11-18T11:44:32.547516Z",
+  "source_available": false,
   "last": {
     "time": "2026-11-18T10:00:00Z",
     "mm": 1308.0,
