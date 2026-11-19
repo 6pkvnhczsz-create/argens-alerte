@@ -1,12 +1,12 @@
 {
   "station": "Y531201001",
-  "checked_at": "2026-11-19T05:43:13.405162Z",
+  "checked_at": "2026-11-19T06:41:55.258370Z",
   "source_available": true,
   "last": {
-    "time": "2026-11-19T05:00:00Z",
+    "time": "2026-11-19T06:00:00Z",
     "mm": 1300.0,
-    "prior_time": "2026-11-19T04:00:00Z",
-    "prior_mm": 1290.0,
+    "prior_time": "2026-11-19T05:00:00Z",
+    "prior_mm": 1300.0,
     "source": "Vigicrues"
   }
 }
