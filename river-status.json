@@ -1,12 +1,12 @@
 {
   "station": "Y531201001",
-  "checked_at": "2026-11-20T02:38:15.899400Z",
+  "checked_at": "2026-11-20T03:30:06.238928Z",
   "source_available": true,
   "last": {
-    "time": "2026-11-20T02:00:00Z",
-    "mm": 1263.0,
-    "prior_time": "2026-11-20T01:00:00Z",
-    "prior_mm": 1258.0,
-    "source": "Hub'Eau"
+    "time": "2026-11-20T03:00:00Z",
+    "mm": 1260.0,
+    "prior_time": "2026-11-20T02:00:00Z",
+    "prior_mm": 1260.0,
+    "source": "Vigicrues"
   }
 }
